@@ -1,0 +1,87 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Manage Students{% endblock %}
+
+{% block admin_content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Add Student Form -->
+    <div class="glass rounded-2xl p-6 shadow-lg lg:col-span-1 h-fit">
+        <h3 class="text-xl font-bold mb-6 text-white border-b border-slate-700 pb-2">Add New Student</h3>
+        
+        <form action="{{ url_for('admin.add_student') }}" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-textMuted mb-1">Full Name</label>
+                <input type="text" name="name" required class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent text-white">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-textMuted mb-1">Hall Ticket Number</label>
+                <input type="text" name="hall_ticket" required class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent text-white">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-textMuted mb-1">Branch</label>
+                <select name="branch_id" required class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent text-white">
+                    <option value="" disabled selected>Select Branch</option>
+                    {% for branch in branches %}
+                        <option value="{{ branch.id }}">{{ branch.name }} ({{ branch.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-textMuted mb-1">Semester</label>
+                <select name="semester" required class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent text-white">
+                    <option value="1">1st Semester</option>
+                    <option value="2">2nd Semester</option>
+                    <option value="3">3rd Semester</option>
+                    <option value="4">4th Semester</option>
+                    <option value="5">5th Semester</option>
+                    <option value="6">6th Semester</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="w-full bg-primary hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors mt-4">
+                Add Student
+            </button>
+        </form>
+    </div>
+
+    <!-- Student List -->
+    <div class="glass rounded-2xl p-6 shadow-lg lg:col-span-2">
+        <h3 class="text-xl font-bold mb-6 text-white border-b border-slate-700 pb-2">Student Directory</h3>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-textMuted">
+                <thead class="text-xs text-slate-300 uppercase bg-slate-800/50">
+                    <tr>
+                        <th class="px-4 py-3 rounded-tl-lg">Hall Ticket</th>
+                        <th class="px-4 py-3">Name</th>
+                        <th class="px-4 py-3">Branch</th>
+                        <th class="px-4 py-3">Sem</th>
+                        <th class="px-4 py-3 text-right rounded-tr-lg">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr class="border-b border-slate-700 hover:bg-slate-800/30 transition-colors">
+                        <td class="px-4 py-3 font-medium text-white">{{ student.hall_ticket }}</td>
+                        <td class="px-4 py-3">{{ student.name }}</td>
+                        <td class="px-4 py-3">{{ student.branch_ref.code }}</td>
+                        <td class="px-4 py-3">{{ student.semester }}</td>
+                        <td class="px-4 py-3 text-right">
+                            <a href="{{ url_for('admin.delete_student', id=student.id) }}" class="text-red-400 hover:text-red-300 ml-3" onclick="return confirm('Are you sure you want to delete this student?');">Delete</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-4 py-8 text-center text-slate-500">No students registered yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

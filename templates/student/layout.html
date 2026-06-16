@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex h-screen bg-background overflow-hidden">
+    <!-- Sidebar -->
+    <div class="w-64 bg-surface shadow-md flex-shrink-0">
+        <div class="p-6">
+            <h2 class="text-2xl font-bold text-emerald-400">Student Portal</h2>
+        </div>
+        <nav class="mt-4">
+            <a href="{{ url_for('student.dashboard') }}" class="block py-3 px-6 text-textMuted hover:bg-slate-700 hover:text-white transition-colors {% if request.endpoint == 'student.dashboard' %}bg-slate-700 text-white border-l-4 border-emerald-400{% endif %}">
+                Dashboard
+            </a>
+            <a href="{{ url_for('student.view_profile') }}" class="block py-3 px-6 text-textMuted hover:bg-slate-700 hover:text-white transition-colors {% if request.endpoint == 'student.view_profile' %}bg-slate-700 text-white border-l-4 border-emerald-400{% endif %}">
+                My Profile
+            </a>
+            <a href="{{ url_for('student.view_timetable') }}" class="block py-3 px-6 text-textMuted hover:bg-slate-700 hover:text-white transition-colors {% if request.endpoint == 'student.view_timetable' %}bg-slate-700 text-white border-l-4 border-emerald-400{% endif %}">
+                Timetable
+            </a>
+            <a href="{{ url_for('student.view_results') }}" class="block py-3 px-6 text-textMuted hover:bg-slate-700 hover:text-white transition-colors {% if request.endpoint == 'student.view_results' %}bg-slate-700 text-white border-l-4 border-emerald-400{% endif %}">
+                Exam Results
+            </a>
+            <a href="{{ url_for('logout') }}" class="block py-3 px-6 text-red-400 hover:bg-slate-700 hover:text-red-300 transition-colors mt-8">
+                Logout
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 overflow-y-auto p-8 relative">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold">{% block title %}Dashboard{% endblock %}</h1>
+            <div class="flex items-center space-x-4">
+                <span class="text-textMuted">Welcome, <span class="text-white font-medium">{{ current_user.username }}</span></span>
+                <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">
+                    S
+                </div>
+            </div>
+        </header>
+
+        {% block student_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

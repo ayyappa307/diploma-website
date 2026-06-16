@@ -1,0 +1,35 @@
+{% extends "student/layout.html" %}
+
+{% block title %}Student Dashboard{% endblock %}
+
+{% block student_content %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="glass p-6 rounded-2xl border-t-4 border-emerald-500">
+        <h3 class="text-lg font-bold mb-4">Academic Status</h3>
+        {% if student %}
+        <div class="space-y-2">
+            <p class="flex justify-between border-b border-slate-700 pb-1">
+                <span class="text-textMuted">Branch</span>
+                <span class="font-medium text-white">{{ student.branch_ref.code }}</span>
+            </p>
+            <p class="flex justify-between border-b border-slate-700 pb-1">
+                <span class="text-textMuted">Semester</span>
+                <span class="font-medium text-white">{{ student.semester }}</span>
+            </p>
+        </div>
+        {% else %}
+        <p class="text-textMuted">Profile details not found.</p>
+        {% endif %}
+    </div>
+
+    <div class="glass p-6 rounded-2xl border-t-4 border-primary">
+        <h3 class="text-lg font-bold mb-4">Quick Links</h3>
+        <ul class="space-y-2 mt-4 text-sm text-textMuted">
+            <li><a href="{{ url_for('student.view_profile') }}" class="hover:text-emerald-400 transition-colors">→ View Full Profile</a></li>
+            <li><a href="{{ url_for('student.view_timetable') }}" class="hover:text-emerald-400 transition-colors">→ Check Class Timetable</a></li>
+            <li><a href="{{ url_for('student.view_results') }}" class="hover:text-emerald-400 transition-colors">→ View Exam Results</a></li>
+            <li><a href="{{ url_for('student.register_face') }}" class="hover:text-emerald-400 transition-colors font-semibold text-white">→ Register AI Face Data</a></li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

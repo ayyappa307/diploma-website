@@ -1,0 +1,225 @@
+{% extends "faculty/layout.html" %}
+
+{% block title %}Mark Attendance{% endblock %}
+
+{% block faculty_content %}
+<div class="glass rounded-2xl shadow-lg p-6 lg:w-3/4 mx-auto text-center">
+    <h3 class="text-xl font-bold mb-4 text-white">AI Face Attendance Scanner</h3>
+    
+    <div class="flex justify-between items-center mb-4">
+        <div>
+            <label class="text-sm text-textMuted mr-2">Select Branch:</label>
+            <select id="branchSelect" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1 text-white text-sm focus:ring-1 focus:ring-accent">
+                {% for branch in branches %}
+                <option value="{{ branch.id }}">{{ branch.code }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div id="statusBadge" class="bg-slate-800 text-slate-400 px-3 py-1 rounded-full text-xs font-bold border border-slate-700">
+            Standby
+        </div>
+    </div>
+
+    <!-- Video container -->
+    <div class="relative w-full aspect-video bg-slate-900 rounded-xl overflow-hidden shadow-inner mb-6 border-2 border-slate-700">
+        <video id="video" class="w-full h-full object-cover transform scale-x-[-1]" autoplay muted></video>
+        <canvas id="overlay" class="absolute top-0 left-0 w-full h-full transform scale-x-[-1]"></canvas>
+        
+        <div id="loading" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 text-accent z-10">
+            <svg class="animate-spin h-8 w-8 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-sm font-medium" id="loadingText">Loading AI Models...</span>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-2 gap-4 text-left border-t border-slate-700 pt-4">
+        <div>
+            <h4 class="text-sm font-medium text-textMuted mb-2">Recently Marked Present</h4>
+            <ul id="presentList" class="space-y-1 text-sm text-emerald-400 font-medium h-32 overflow-y-auto">
+                <!-- Li appended here -->
+            </ul>
+        </div>
+        <div class="text-right">
+            <button id="startScanBtn" class="bg-accent hover:bg-violet-600 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg disabled:opacity-50">
+                Start Scanning
+            </button>
+            <button id="stopScanBtn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg ml-2 hidden">
+                Stop
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+<script>
+    const video = document.getElementById('video');
+    const overlay = document.getElementById('overlay');
+    const loading = document.getElementById('loading');
+    const loadingText = document.getElementById('loadingText');
+    const startScanBtn = document.getElementById('startScanBtn');
+    const stopScanBtn = document.getElementById('stopScanBtn');
+    const branchSelect = document.getElementById('branchSelect');
+    const presentList = document.getElementById('presentList');
+    const statusBadge = document.getElementById('statusBadge');
+    
+    let isModelsLoaded = false;
+    let isScanning = false;
+    let localStream = null;
+    let labeledFaceDescriptors = [];
+    let faceMatcher = null;
+    let scanInterval;
+    let presentStudents = new Set(); // To avoid duplicate logs in UI
+
+    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+
+    async function init() {
+        try {
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+            
+            isModelsLoaded = true;
+            loading.style.display = 'none';
+        } catch (e) {
+            console.error(e);
+            loadingText.textContent = 'Failed to load models.';
+            loadingText.className = 'text-red-400';
+        }
+    }
+
+    async function fetchStudentData() {
+        const branchId = branchSelect.value;
+        loading.style.display = 'flex';
+        loadingText.textContent = 'Fetching student face data...';
+        
+        try {
+            const response = await fetch(`{{ url_for('faculty.get_student_faces') }}?branch_id=${branchId}`);
+            const data = await response.json();
+            
+            labeledFaceDescriptors = [];
+            for (let i = 0; i < data.students.length; i++) {
+                const s = data.students[i];
+                if (s.face_data) {
+                    const desc = new Float32Array(s.face_data);
+                    labeledFaceDescriptors.push(new faceapi.LabeledFaceDescriptors(s.hall_ticket, [desc]));
+                }
+            }
+            
+            if (labeledFaceDescriptors.length > 0) {
+                faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6);
+            } else {
+                faceMatcher = null;
+            }
+            
+        } catch (err) {
+            console.error("Failed to fetch student faces", err);
+        }
+        loading.style.display = 'none';
+    }
+
+    async function startVideo() {
+        if (!isModelsLoaded) return;
+        
+        await fetchStudentData();
+        
+        if (!faceMatcher) {
+            alert("No registered face data found for this branch.");
+            return;
+        }
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+            .then(stream => {
+                localStream = stream;
+                video.srcObject = stream;
+                isScanning = true;
+                startScanBtn.classList.add('hidden');
+                stopScanBtn.classList.remove('hidden');
+                statusBadge.textContent = "Scanning...";
+                statusBadge.className = "bg-accent/20 text-accent px-3 py-1 rounded-full text-xs font-bold border border-accent/50 animate-pulse";
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Camera access denied.");
+            });
+    }
+
+    function stopVideo() {
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            video.srcObject = null;
+        }
+        isScanning = false;
+        clearInterval(scanInterval);
+        overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
+        
+        startScanBtn.classList.remove('hidden');
+        stopScanBtn.classList.add('hidden');
+        statusBadge.textContent = "Standby";
+        statusBadge.className = "bg-slate-800 text-slate-400 px-3 py-1 rounded-full text-xs font-bold border border-slate-700";
+    }
+
+    video.addEventListener('play', () => {
+        const displaySize = { width: video.videoWidth, height: video.videoHeight };
+        faceapi.matchDimensions(overlay, displaySize);
+
+        scanInterval = setInterval(async () => {
+            if (!isScanning) return;
+            
+            const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+                                        .withFaceLandmarks().withFaceDescriptors();
+            
+            const resizedDetections = faceapi.resizeResults(detections, displaySize);
+            overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
+            faceapi.draw.drawDetections(overlay, resizedDetections);
+            
+            if (faceMatcher) {
+                const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor));
+                
+                results.forEach((result, i) => {
+                    const box = resizedDetections[i].detection.box;
+                    const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() });
+                    drawBox.draw(overlay);
+                    
+                    if (result.label !== 'unknown' && result.distance < 0.6) {
+                        markAttendance(result.label);
+                    }
+                });
+            }
+        }, 100);
+    });
+
+    async function markAttendance(hallTicket) {
+        if (presentStudents.has(hallTicket)) return; // Already marked in this session
+        
+        try {
+            const res = await fetch("{{ url_for('faculty.mark_attendance') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hall_ticket: hallTicket })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                presentStudents.add(hallTicket);
+                const li = document.createElement('li');
+                li.innerHTML = `✓ ${hallTicket} <span class="text-xs opacity-50">(${new Date().toLocaleTimeString()})</span>`;
+                presentList.prepend(li);
+            }
+        } catch (e) {
+            console.error("Error marking attendance", e);
+        }
+    }
+
+    startScanBtn.addEventListener('click', startVideo);
+    stopScanBtn.addEventListener('click', stopVideo);
+    branchSelect.addEventListener('change', () => {
+        if (isScanning) { stopVideo(); }
+    });
+
+    init();
+</script>
+{% endblock %}

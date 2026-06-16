@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Diploma SMS</title>
+    <!-- Theme Initialization Script (Before CSS loads) -->
+    <script>
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        accent: '#8b5cf6',
+                        background: 'var(--bg-color)',
+                        surface: 'var(--surface-color)',
+                        textMain: 'var(--text-main)',
+                        textMuted: 'var(--text-muted)',
+                        glassBorder: 'var(--glass-border)',
+                        glassBg: 'var(--glass-bg)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg-color: #f1f5f9;
+            /* slate-100 */
+            --surface-color: #ffffff;
+            --text-main: #0f172a;
+            /* slate-900 */
+            --text-muted: #64748b;
+            /* slate-500 */
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(0, 0, 0, 0.1);
+        }
+
+        .dark {
+            --bg-color: #0f172a;
+            /* slate-900 */
+            --surface-color: #1e293b;
+            /* slate-800 */
+            --text-main: #f8fafc;
+            /* slate-50 */
+            --text-muted: #94a3b8;
+            /* slate-400 */
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        /* Override hardcoded dark mode utility classes in HTML for Light Mode support */
+        :root:not(.dark) .text-white {
+            color: var(--text-main) !important;
+        }
+
+        :root:not(.dark) .bg-slate-800 {
+            background-color: var(--surface-color) !important;
+            border-color: #e2e8f0 !important;
+        }
+
+        :root:not(.dark) .bg-slate-900 {
+            background-color: #e2e8f0 !important;
+        }
+
+        :root:not(.dark) .bg-slate-800\\50 {
+            background-color: rgba(255, 255, 255, 0.8) !important;
+        }
+
+        :root:not(.dark) .border-slate-700 {
+            border-color: #cbd5e1 !important;
+        }
+
+        :root:not(.dark) .text-slate-300 {
+            color: #475569 !important;
+        }
+
+        :root:not(.dark) .hover\\:bg-slate-700:hover {
+            background-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+
+        :root:not(.dark) .hover\\:bg-slate-800\\30:hover {
+            background-color: #f8fafc !important;
+        }
+    </style>
+    <!-- Add Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    {% block head %}{% endblock %}
+</head>
+
+<body class="min-h-screen flex flex-col antialiased">
+
+    <!-- Flash Messages -->
+    <div class="fixed top-4 right-4 z-50 flex flex-col gap-2">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div
+            class="px-4 py-3 rounded-lg shadow-lg text-white font-medium text-sm transform transition-all duration-300 translate-y-0
+                        {% if category == 'error' %} bg-red-500/90 border border-red-400 {% else %} bg-emerald-500/90 border border-emerald-400 {% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Optional Footer -->
+    {% block footer %}{% endblock %}
+
+    <!-- Theme Toggle Button -->
+    <button id="theme-toggle" type="button"
+        class="fixed bottom-6 right-6 z-50 p-3 bg-surface border border-glassBorder rounded-full shadow-lg text-textMuted hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary transition-colors">
+        <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+        </svg>
+        <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg">
+            <path
+                d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+                fill-rule="evenodd" clip-rule="evenodd"></path>
+        </svg>
+    </button>
+
+    <script>
+        // Auto-hide flash messages
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.fixed.top-4 > div');
+            alerts.forEach(alert => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
+
+        // Theme Toggle Logic
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+        // Change the icons inside the button based on previous settings
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            themeToggleLightIcon.classList.remove('hidden');
+        } else {
+            themeToggleDarkIcon.classList.remove('hidden');
+        }
+
+        const themeToggleBtn = document.getElementById('theme-toggle');
+
+        themeToggleBtn.addEventListener('click', function () {
+            // toggle icons inside button
+            themeToggleDarkIcon.classList.toggle('hidden');
+            themeToggleLightIcon.classList.toggle('hidden');
+
+            // if set via local storage previously
+            if (localStorage.getItem('color-theme')) {
+                if (localStorage.getItem('color-theme') === 'light') {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('color-theme', 'light');
+                }
+            } else {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.setItem('color-theme', 'light');
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.setItem('color-theme', 'dark');
+                }
+            }
+        });
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

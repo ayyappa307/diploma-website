@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex h-screen bg-background overflow-hidden">
+    <!-- Sidebar -->
+    <div class="w-64 bg-surface shadow-md flex-shrink-0">
+        <div class="p-6">
+            <h2 class="text-2xl font-bold text-primary">Admin Panel</h2>
+        </div>
+        <nav class="mt-4">
+            <a href="{{ url_for('admin.dashboard') }}" class="block py-3 px-6 text-textMuted hover:bg-slate-700 hover:text-white transition-colors {% if request.endpoint == 'admin.dashboard' %}bg-slate-700 text-white border-l-4 border-primary{% endif %}">
+                Dashboard
+            </a>
+            <a href="{{ url_for('admin.manage_students') }}" class="block py-3 px-6 text-textMuted hover:bg-slate-700 hover:text-white transition-colors {% if request.endpoint == 'admin.manage_students' %}bg-slate-700 text-white border-l-4 border-primary{% endif %}">
+                Manage Students
+            </a>
+            <a href="{{ url_for('admin.manage_faculty') }}" class="block py-3 px-6 text-textMuted hover:bg-slate-700 hover:text-white transition-colors {% if request.endpoint == 'admin.manage_faculty' %}bg-slate-700 text-white border-l-4 border-primary{% endif %}">
+                Manage Faculty
+            </a>
+            <a href="{{ url_for('admin.manage_branches') }}" class="block py-3 px-6 text-textMuted hover:bg-slate-700 hover:text-white transition-colors {% if request.endpoint == 'admin.manage_branches' %}bg-slate-700 text-white border-l-4 border-primary{% endif %}">
+                Manage Branches
+            </a>
+            <a href="{{ url_for('admin.manage_timetable') }}" class="block py-3 px-6 text-textMuted hover:bg-slate-700 hover:text-white transition-colors {% if request.endpoint == 'admin.manage_timetable' %}bg-slate-700 text-white border-l-4 border-primary{% endif %}">
+                Upload Timetables
+            </a>
+            <a href="{{ url_for('admin.view_reports') }}" class="block py-3 px-6 text-textMuted hover:bg-slate-700 hover:text-white transition-colors {% if request.endpoint == 'admin.view_reports' %}bg-slate-700 text-white border-l-4 border-primary{% endif %}">
+                Attendance Reports
+            </a>
+            <a href="{{ url_for('logout') }}" class="block py-3 px-6 text-red-400 hover:bg-slate-700 hover:text-red-300 transition-colors mt-8">
+                Logout
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 overflow-y-auto p-8 relative">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold">{% block title %}Dashboard{% endblock %}</h1>
+            <div class="flex items-center space-x-4">
+                <span class="text-textMuted">Welcome, <span class="text-white font-medium">{{ current_user.username }}</span></span>
+                <div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                    A
+                </div>
+            </div>
+        </header>
+
+        {% block admin_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

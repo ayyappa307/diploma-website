@@ -1,0 +1,47 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Attendance Reports{% endblock %}
+
+{% block admin_content %}
+<div class="glass rounded-2xl shadow-lg p-6">
+    <div class="flex justify-between items-center mb-6 border-b border-slate-700 pb-2">
+        <h3 class="text-xl font-bold text-white">Recent Attendance Logs</h3>
+        <button class="bg-primary hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors" onclick="window.print()">Export / Print</button>
+    </div>
+    
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-textMuted">
+            <thead class="text-xs text-slate-300 uppercase bg-slate-800/50">
+                <tr>
+                    <th class="px-4 py-3 rounded-tl-lg">Date</th>
+                    <th class="px-4 py-3">Student Hall Ticket</th>
+                    <th class="px-4 py-3">Name</th>
+                    <th class="px-4 py-3">Status</th>
+                    <th class="px-4 py-3 text-right rounded-tr-lg">Method</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in attendances|sort(attribute='date', reverse=True) %}
+                <tr class="border-b border-slate-700 hover:bg-slate-800/30 transition-colors">
+                    <td class="px-4 py-3 font-medium text-white">{{ log.date.strftime('%Y-%m-%d') }}</td>
+                    <td class="px-4 py-3 text-primary">{{ log.student.hall_ticket }}</td>
+                    <td class="px-4 py-3">{{ log.student.name }}</td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-1 rounded text-xs font-bold {% if log.status == 'Present' %}bg-emerald-500/20 text-emerald-400 border border-emerald-500/50{% else %}bg-red-500/20 text-red-400 border border-red-500/50{% endif %}">
+                            {{ log.status }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-right text-xs">
+                        <span class="bg-slate-700 px-2 py-1 rounded">{{ log.method }}</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="px-4 py-8 text-center text-slate-500">No attendance records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

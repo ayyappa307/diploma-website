@@ -1,0 +1,38 @@
+{% extends "faculty/layout.html" %}
+
+{% block title %}Faculty Dashboard{% endblock %}
+
+{% block faculty_content %}
+<div class="glass rounded-2xl shadow-lg p-6 mb-8">
+    <h3 class="text-xl font-bold mb-4">My Profile</h3>
+    {% if faculty %}
+    <div class="grid grid-cols-2 gap-4 text-sm">
+        <div>
+            <p class="text-textMuted">Name</p>
+            <p class="font-medium text-white">{{ faculty.name }}</p>
+        </div>
+        <div>
+            <p class="text-textMuted">Employee ID</p>
+            <p class="font-medium text-white">{{ faculty.emp_id }}</p>
+        </div>
+        <div>
+            <p class="text-textMuted">Department</p>
+            <p class="font-medium text-white">{{ faculty.department }}</p>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-textMuted">Profile details not found.</p>
+    {% endif %}
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="glass p-6 rounded-2xl border-t-4 border-accent">
+        <h3 class="text-lg font-bold mb-2">Quick Actions</h3>
+        <ul class="space-y-2 mt-4 text-sm text-textMuted">
+            <li><a href="{{ url_for('faculty.view_students') }}" class="hover:text-accent transition-colors">→ View Student List</a></li>
+            <li><a href="{{ url_for('faculty.take_attendance') }}" class="hover:text-accent transition-colors font-semibold text-white">→ Mark Face Attendance</a></li>
+            <li><span class="opacity-50">→ Upload Timetable (Coming Soon)</span></li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

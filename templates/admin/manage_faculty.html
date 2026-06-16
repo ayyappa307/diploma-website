@@ -1,0 +1,68 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Manage Faculty{% endblock %}
+
+{% block admin_content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Add Faculty Form -->
+    <div class="glass rounded-2xl p-6 shadow-lg lg:col-span-1 h-fit">
+        <h3 class="text-xl font-bold mb-6 text-white border-b border-slate-700 pb-2">Add New Faculty</h3>
+        
+        <form action="{{ url_for('admin.add_faculty') }}" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-textMuted mb-1">Full Name</label>
+                <input type="text" name="name" required class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent text-white">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-textMuted mb-1">Employee ID</label>
+                <input type="text" name="emp_id" required class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent text-white">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-textMuted mb-1">Department</label>
+                <input type="text" name="department" placeholder="e.g. CME, Mathematics" required class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent text-white">
+            </div>
+            
+            <button type="submit" class="w-full bg-accent hover:bg-violet-600 text-white font-medium py-2 px-4 rounded-lg transition-colors mt-4">
+                Add Faculty
+            </button>
+        </form>
+    </div>
+
+    <!-- Faculty List -->
+    <div class="glass rounded-2xl p-6 shadow-lg lg:col-span-2">
+        <h3 class="text-xl font-bold mb-6 text-white border-b border-slate-700 pb-2">Faculty Directory</h3>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-textMuted">
+                <thead class="text-xs text-slate-300 uppercase bg-slate-800/50">
+                    <tr>
+                        <th class="px-4 py-3 rounded-tl-lg">Emp ID</th>
+                        <th class="px-4 py-3">Name</th>
+                        <th class="px-4 py-3">Department</th>
+                        <th class="px-4 py-3 text-right rounded-tr-lg">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fac in faculty %}
+                    <tr class="border-b border-slate-700 hover:bg-slate-800/30 transition-colors">
+                        <td class="px-4 py-3 font-medium text-white">{{ fac.emp_id }}</td>
+                        <td class="px-4 py-3">{{ fac.name }}</td>
+                        <td class="px-4 py-3">{{ fac.department }}</td>
+                        <td class="px-4 py-3 text-right">
+                            <a href="{{ url_for('admin.delete_faculty', id=fac.id) }}" class="text-red-400 hover:text-red-300 ml-3" onclick="return confirm('Are you sure you want to delete this faculty member?');">Delete</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="px-4 py-8 text-center text-slate-500">No faculty members registered yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

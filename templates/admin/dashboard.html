@@ -1,0 +1,32 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Dashboard Overview{% endblock %}
+
+{% block admin_content %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Stat Cards -->
+    <div class="glass p-6 rounded-2xl shadow-lg border-l-4 border-primary">
+        <h3 class="text-textMuted font-medium text-sm">Total Students</h3>
+        <p class="text-4xl font-bold text-white mt-2">{{ stats.total_students }}</p>
+    </div>
+    
+    <div class="glass p-6 rounded-2xl shadow-lg border-l-4 border-accent">
+        <h3 class="text-textMuted font-medium text-sm">Total Faculty</h3>
+        <p class="text-4xl font-bold text-white mt-2">{{ stats.total_faculty }}</p>
+    </div>
+    
+    <div class="glass p-6 rounded-2xl shadow-lg border-l-4 border-emerald-500">
+        <h3 class="text-textMuted font-medium text-sm">Active Branches</h3>
+        <p class="text-4xl font-bold text-white mt-2">{{ stats.total_branches }}</p>
+    </div>
+</div>
+
+<div class="glass rounded-2xl shadow-lg p-6">
+    <h3 class="text-xl font-bold mb-4">Recent Activity</h3>
+    <p class="text-textMuted">System initialized. Seed data populated.</p>
+    <!-- Placeholder for charts later -->
+    <div class="mt-8 h-64 border-2 border-dashed border-slate-700 rounded-xl flex items-center justify-center text-slate-500">
+        Analytics Chart Area
+    </div>
+</div>
+{% endblock %}

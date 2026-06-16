@@ -1,0 +1,152 @@
+{% extends "student/layout.html" %}
+
+{% block title %}Register Face Data{% endblock %}
+
+{% block student_content %}
+<div class="glass rounded-2xl shadow-lg p-6 lg:w-2/3 mx-auto text-center">
+    <h3 class="text-xl font-bold mb-4 text-white">AI Face Registration</h3>
+    <p class="text-sm text-textMuted mb-6">Please look directly at the camera. Ensure you are in a well-lit area without glasses or hats.</p>
+    
+    <!-- Video container -->
+    <div class="relative w-full max-w-md mx-auto aspect-video bg-slate-800 rounded-xl overflow-hidden shadow-inner mb-6 border-2 border-slate-700">
+        <video id="video" class="w-full h-full object-cover transform scale-x-[-1]" autoplay muted></video>
+        <!-- Overlay canvas for drawing detections -->
+        <canvas id="overlay" class="absolute top-0 left-0 w-full h-full transform scale-x-[-1]"></canvas>
+        
+        <!-- Loading spinner -->
+        <div id="loading" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80 text-primary z-10">
+            <svg class="animate-spin h-8 w-8 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-sm font-medium">Loading AI Models...</span>
+        </div>
+    </div>
+    
+    <button id="captureBtn" class="bg-primary hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+        Capture & Save
+    </button>
+    
+    <p id="statusMsg" class="mt-4 text-sm font-medium"></p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Load face-api.js from unpkg CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+<script>
+    const video = document.getElementById('video');
+    const overlay = document.getElementById('overlay');
+    const loading = document.getElementById('loading');
+    const captureBtn = document.getElementById('captureBtn');
+    const statusMsg = document.getElementById('statusMsg');
+    
+    let isModelsLoaded = false;
+    let localStream = null;
+
+    // We will use jsdelivr for weights too
+    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+
+    async function init() {
+        try {
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+            
+            isModelsLoaded = true;
+            loading.innerHTML = '<span class="text-sm font-medium text-emerald-400">Models Loaded. Requesting camera...</span>';
+            startVideo();
+        } catch (e) {
+            console.error("Error loading models:", e);
+            loading.innerHTML = '<span class="text-sm font-medium text-red-400">Failed to load AI models.</span>';
+        }
+    }
+
+    function startVideo() {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
+            .then(stream => {
+                localStream = stream;
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Camera access denied or error:", err);
+                loading.innerHTML = '<span class="text-sm font-medium text-red-400">Camera access denied. Please allow camera permissions.</span>';
+            });
+    }
+
+    video.addEventListener('play', () => {
+        if(!isModelsLoaded) return;
+        loading.style.display = 'none';
+        captureBtn.disabled = false;
+        
+        const displaySize = { width: video.videoWidth, height: video.videoHeight };
+        faceapi.matchDimensions(overlay, displaySize);
+
+        setInterval(async () => {
+            if(video.paused || video.ended) return;
+            const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+            const resizedDetections = faceapi.resizeResults(detections, displaySize);
+            overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height);
+            faceapi.draw.drawDetections(overlay, resizedDetections);
+            
+            if (detections.length === 1) {
+                captureBtn.classList.remove('bg-red-500');
+                captureBtn.classList.add('bg-primary');
+                captureBtn.disabled = false;
+            } else if (detections.length > 1) {
+                statusMsg.textContent = "Multiple faces detected. Ensure only one person is in frame.";
+                statusMsg.className = "mt-4 text-sm font-medium text-red-400";
+                captureBtn.disabled = true;
+            } else {
+                captureBtn.disabled = true;
+            }
+        }, 100);
+    });
+
+    captureBtn.addEventListener('click', async () => {
+        captureBtn.disabled = true;
+        statusMsg.textContent = "Processing face data...";
+        statusMsg.className = "mt-4 text-sm font-medium text-blue-400";
+
+        const detections = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+        
+        if (detections) {
+            const descriptor = Array.from(detections.descriptor);
+            
+            // Send to backend
+            try {
+                const response = await fetch("{{ url_for('student.save_face') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ face_descriptor: descriptor })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    statusMsg.textContent = "Face data saved successfully!";
+                    statusMsg.className = "mt-4 text-sm font-medium text-emerald-400";
+                    // Stop camera
+                    if (localStream) {
+                        localStream.getTracks().forEach(track => track.stop());
+                    }
+                    setTimeout(() => window.location.href = "{{ url_for('student.view_profile') }}", 2000);
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                console.error(error);
+                statusMsg.textContent = "Failed to save data on server.";
+                statusMsg.className = "mt-4 text-sm font-medium text-red-400";
+                captureBtn.disabled = false;
+            }
+        } else {
+            statusMsg.textContent = "No face detected clearly. Please try again.";
+            statusMsg.className = "mt-4 text-sm font-medium text-red-400";
+            captureBtn.disabled = false;
+        }
+    });
+
+    // Start initialization
+    init();
+</script>
+{% endblock %}

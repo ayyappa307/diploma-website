@@ -1,0 +1,80 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Manage Timetables{% endblock %}
+
+{% block admin_content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Upload Form -->
+    <div class="glass rounded-2xl p-6 shadow-lg lg:col-span-1 h-fit">
+        <h3 class="text-xl font-bold mb-6 text-white border-b border-slate-700 pb-2">Upload Timetable (PDF)</h3>
+        
+        <form action="{{ url_for('admin.manage_timetable') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-textMuted mb-1">Branch</label>
+                <select name="branch_id" required class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent text-white">
+                    <option value="" disabled selected>Select Branch</option>
+                    {% for branch in branches %}
+                        <option value="{{ branch.id }}">{{ branch.code }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-textMuted mb-1">Semester</label>
+                <select name="semester" required class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 focus:ring-2 focus:ring-primary focus:border-transparent text-white">
+                    <option value="1">1st Semester</option>
+                    <option value="2">2nd Semester</option>
+                    <option value="3">3rd Semester</option>
+                    <option value="4">4th Semester</option>
+                    <option value="5">5th Semester</option>
+                    <option value="6">6th Semester</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-textMuted mb-1">PDF File</label>
+                <input type="file" name="file" accept=".pdf" required class="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-4 py-2 text-white">
+            </div>
+            
+            <button type="submit" class="w-full bg-primary hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors mt-4 shadow-lg">
+                Upload
+            </button>
+        </form>
+    </div>
+
+    <!-- Uploaded Timetables -->
+    <div class="glass rounded-2xl p-6 shadow-lg lg:col-span-2">
+        <h3 class="text-xl font-bold mb-6 text-white border-b border-slate-700 pb-2">Uploaded Timetables</h3>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-textMuted">
+                <thead class="text-xs text-slate-300 uppercase bg-slate-800/50">
+                    <tr>
+                        <th class="px-4 py-3 rounded-tl-lg">Branch</th>
+                        <th class="px-4 py-3">Semester</th>
+                        <th class="px-4 py-3">Uploaded On</th>
+                        <th class="px-4 py-3 text-right rounded-tr-lg">File</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tt in timetables %}
+                    <tr class="border-b border-slate-700 hover:bg-slate-800/30 transition-colors">
+                        <td class="px-4 py-3 font-medium text-emerald-400">{{ tt.branch_ref.code }}</td>
+                        <td class="px-4 py-3 text-white">Sem {{ tt.semester }}</td>
+                        <td class="px-4 py-3">{{ tt.uploaded_at.strftime('%Y-%m-%d') }}</td>
+                        <td class="px-4 py-3 text-right">
+                            <a href="{{ url_for('static', filename=tt.file_path) }}" target="_blank" class="text-primary hover:text-blue-400">View PDF</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="px-4 py-8 text-center text-slate-500">No timetables uploaded yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

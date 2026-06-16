@@ -1,0 +1,39 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}Manage Branches{% endblock %}
+
+{% block admin_content %}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    
+    <!-- Branches List -->
+    <div class="glass rounded-2xl p-6 shadow-lg">
+        <h3 class="text-xl font-bold mb-6 text-white border-b border-slate-700 pb-2">Active Branches</h3>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-textMuted">
+                <thead class="text-xs text-slate-300 uppercase bg-slate-800/50">
+                    <tr>
+                        <th class="px-4 py-3 rounded-tl-lg">Code</th>
+                        <th class="px-4 py-3 rounded-tr-lg">Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for branch in branches %}
+                    <tr class="border-b border-slate-700 hover:bg-slate-800/30 transition-colors">
+                        <td class="px-4 py-3 font-bold text-emerald-400">{{ branch.code }}</td>
+                        <td class="px-4 py-3 text-white">{{ branch.name }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="2" class="px-4 py-8 text-center text-slate-500">No branches registered.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-4 text-xs text-slate-500">
+            Note: Branches are currently pre-populated (CME, ECE, EEE, MECH, CIVIL) per system requirements. Adding new branches dynamically is disabled for this MVP phase.
+        </div>
+    </div>
+</div>
+{% endblock %}
