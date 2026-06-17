@@ -5,8 +5,8 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'super-secret-key'
     
-    # Handle DATABASE_URL conversion for postgres if needed
-    db_url = os.environ.get('DATABASE_URL')
+    # Handle DATABASE_URL or POSTGRES_URL conversion for postgres if needed
+    db_url = os.environ.get('DATABASE_URL') or os.environ.get('POSTGRES_URL')
     if db_url:
         if db_url.startswith("postgres://"):
             db_url = db_url.replace("postgres://", "postgresql://", 1)
